@@ -1,0 +1,24 @@
+{
+  "server": {
+    "port": 3000,
+    "nodeEnv": "development"
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "user": "cashcraft_user",
+    "password": "your_password_here",
+    "name": "cashcraft_db"
+  },
+  "jwt": {
+    "secret": "your_super_secret_jwt_key_here",
+    "expiresIn": "7d",
+    "refreshExpiresIn": "30d"
+  },
+  "cors": {
+    "origin": "http://localhost:19006"
+  },
+  "bcrypt": {
+    "rounds": 10
+  }
+} 
