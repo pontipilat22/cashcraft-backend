@@ -1,14 +1,14 @@
-import { Sequelize } from 'sequelize';
-import config from './config';
+// src/db/sequelize.ts
 
-const sequelize = new Sequelize({
-  dialect: config.database.dialect,
-  host: config.database.host,
-  port: config.database.port,
-  username: config.database.user,
-  password: config.database.password,
-  database: config.database.name,
-  logging: config.database.logging ? console.log : false,
+import { Sequelize } from 'sequelize';
+
+// Создание экземпляра Sequelize с использованием DATABASE_URL
+const sequelize = new Sequelize(process.env.DATABASE_URL!, {
+  dialect: 'postgres',
+  logging: false,
+  dialectOptions: {
+    ssl: true,
+  },
   define: {
     timestamps: true,
     underscored: true,
@@ -24,6 +24,7 @@ const sequelize = new Sequelize({
   },
 });
 
+// Функция для проверки подключения к базе данных
 export const testConnection = async (): Promise<void> => {
   try {
     await sequelize.authenticate();
@@ -35,3 +36,4 @@ export const testConnection = async (): Promise<void> => {
 };
 
 export default sequelize;
+ 
