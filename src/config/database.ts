@@ -1,30 +1,16 @@
-// src/db/sequelize.ts
-
 import { Sequelize } from 'sequelize';
 
-// Создание экземпляра Sequelize с использованием DATABASE_URL
-const sequelize = new Sequelize(process.env.DATABASE_URL!, {
+const sequelize = new Sequelize(process.env.DATABASE_URL as string, {
   dialect: 'postgres',
   logging: false,
   dialectOptions: {
-    ssl: true,
-  },
-  define: {
-    timestamps: true,
-    underscored: true,
-    freezeTableName: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-  },
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000,
+    ssl: {
+      require: true,
+      rejectUnauthorized: false, // чтобы не ругался на self-signed сертификат
+    },
   },
 });
 
-// Функция для проверки подключения к базе данных
 export const testConnection = async (): Promise<void> => {
   try {
     await sequelize.authenticate();
@@ -36,4 +22,3 @@ export const testConnection = async (): Promise<void> => {
 };
 
 export default sequelize;
- 
