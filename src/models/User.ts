@@ -20,18 +20,18 @@ export interface UserAttributes {
 export interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'is_premium' | 'is_guest' | 'is_verified' | 'created_at' | 'updated_at'> {}
 
 export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
-  public id!: string;
-  public email!: string;
-  public password!: string;
-  public display_name?: string;
-  public is_premium!: boolean;
-  public premium_expires_at?: Date;
-  public is_guest!: boolean;
-  public google_id?: string;
-  public is_verified!: boolean;
-  public last_login?: Date;
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
+  declare id: string;
+  declare email: string;
+  declare password: string;
+  declare display_name?: string;
+  declare is_premium: boolean;
+  declare premium_expires_at?: Date;
+  declare is_guest: boolean;
+  declare google_id?: string;
+  declare is_verified: boolean;
+  declare last_login?: Date;
+  declare readonly created_at: Date;
+  declare readonly updated_at: Date;
 
   // Метод для проверки пароля
   public async validatePassword(password: string): Promise<boolean> {

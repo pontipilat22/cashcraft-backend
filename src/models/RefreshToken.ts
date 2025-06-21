@@ -13,12 +13,12 @@ export interface RefreshTokenCreationAttributes extends Optional<RefreshTokenAtt
   'id' | 'created_at' | 'updated_at'> {}
 
 export class RefreshToken extends Model<RefreshTokenAttributes, RefreshTokenCreationAttributes> implements RefreshTokenAttributes {
-  public id!: string;
-  public user_id!: string;
-  public token!: string;
-  public expires_at!: Date;
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
+  declare id: string;
+  declare user_id: string;
+  declare token: string;
+  declare expires_at: Date;
+  declare readonly created_at: Date;
+  declare readonly updated_at: Date;
 
   // Проверка истечения токена
   public isExpired(): boolean {

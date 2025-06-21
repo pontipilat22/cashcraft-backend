@@ -76,7 +76,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       display_name: displayName || email.split('@')[0],
     });
 
-    const userId = user.get('id');
+    const userId = user.id;
 
     // Создаем токены
     const { accessToken, refreshToken } = generateTokens(userId);
@@ -133,7 +133,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // Обновляем последний вход
     await user.update({ last_login: new Date() });
 
-    const userId = user.get('id');
+    const userId = user.id;
 
     // Создаем токены
     const { accessToken, refreshToken } = generateTokens(userId);
@@ -210,7 +210,7 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
     // Удаляем старый токен
     await storedToken.destroy();
 
-    const userId = user.get('id');
+    const userId = user.id;
 
     // Создаем новые токены
     const tokens = generateTokens(userId);
@@ -273,7 +273,7 @@ export const guestLogin = async (req: Request, res: Response): Promise<void> => 
       is_guest: true,
     });
 
-    const userId = user.get('id');
+    const userId = user.id;
 
     // Создаем токены
     const { accessToken, refreshToken } = generateTokens(userId);
@@ -342,7 +342,7 @@ export const googleLogin = async (req: Request, res: Response): Promise<void> =>
           is_verified: true,
           last_login: new Date(), // Set last_login on creation
         });
-        userId = newUser.get('id');
+        userId = newUser.id;
         await initializeUserData(userId);
         // Re-fetch to have a consistent instance for the response
         user = await User.findByPk(userId); 
