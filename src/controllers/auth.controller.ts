@@ -133,22 +133,24 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // Обновляем последний вход
     await user.update({ last_login: new Date() });
 
+    const userId = user.get('id');
+
     // Создаем токены
-    const { accessToken, refreshToken } = generateTokens(user.get('id'));
+    const { accessToken, refreshToken } = generateTokens(userId);
 
     // Сохраняем refresh токен
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
     await RefreshToken.create({
-      user_id: user.get('id'),
+      user_id: userId,
       token: refreshToken,
       expires_at: expiresAt,
     });
 
     res.json({
       user: {
-        id: user.get('id'),
+        id: userId,
         email: user.email,
         displayName: user.display_name,
         isPremium: user.is_premium,
@@ -208,15 +210,17 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
     // Удаляем старый токен
     await storedToken.destroy();
 
+    const userId = user.get('id');
+
     // Создаем новые токены
-    const tokens = generateTokens(user.get('id'));
+    const tokens = generateTokens(userId);
 
     // Сохраняем новый refresh токен
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
     await RefreshToken.create({
-      user_id: user.get('id'),
+      user_id: userId,
       token: tokens.refreshToken,
       expires_at: expiresAt,
     });
@@ -307,39 +311,47 @@ export const guestLogin = async (req: Request, res: Response): Promise<void> => 
 // Вход через Google
 export const googleLogin = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { idToken, email, name, googleId } = req.body;
-    
+    const { email, name, googleId } = req.body;
     console.log('Google login request:', { email, name, googleId });
 
-    // Проверяем, существует ли пользователь с таким Google ID
-    let user = await User.findOne({ where: { google_id: googleId } });
+    let user: User | null;
+    let userId: string;
 
-    if (!user) {
+    // Проверяем, существует ли пользователь с таким Google ID
+    user = await User.findOne({ where: { google_id: googleId } });
+
+    if (user) {
+      // Case 1: User found by google_id
+      userId = user.id;
+      await user.update({ last_login: new Date() });
+    } else {
       // Проверяем, существует ли пользователь с таким email
       user = await User.findOne({ where: { email } });
 
       if (user) {
-        // Связываем существующего пользователя с Google
-        await user.update({ google_id: googleId });
+        // Case 2: User found by email, link to googleId
+        await user.update({ google_id: googleId, last_login: new Date() });
+        userId = user.id;
       } else {
-        // Создаем нового пользователя
-        user = await User.create({
+        // Case 3: Create new user
+        const newUser = await User.create({
           email,
           password: Math.random().toString(36).substring(7), // Случайный пароль
           display_name: name || email.split('@')[0],
           google_id: googleId,
           is_verified: true,
+          last_login: new Date(), // Set last_login on creation
         });
-
-        // Создаем начальные данные
-        await initializeUserData(user.get('id'));
+        userId = newUser.get('id');
+        await initializeUserData(userId);
+        // Re-fetch to have a consistent instance for the response
+        user = await User.findByPk(userId); 
+        if(!user) {
+            // This should realistically not happen
+            throw new Error("Could not fetch newly created user for response.");
+        }
       }
     }
-
-    const userId = user.get('id');
-
-    // Обновляем последний вход
-    await user.update({ last_login: new Date() });
 
     // Создаем токены
     const { accessToken, refreshToken } = generateTokens(userId);
