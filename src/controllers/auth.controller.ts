@@ -76,25 +76,27 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       display_name: displayName || email.split('@')[0],
     });
 
+    const userId = user.get('id');
+
     // Создаем токены
-    const { accessToken, refreshToken } = generateTokens(user.id);
+    const { accessToken, refreshToken } = generateTokens(userId);
 
     // Сохраняем refresh токен
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 дней
 
     await RefreshToken.create({
-      user_id: user.id,
+      user_id: userId,
       token: refreshToken,
       expires_at: expiresAt,
     });
 
     // Создаем начальные данные для пользователя
-    await initializeUserData(user.id);
+    await initializeUserData(userId);
 
     res.status(201).json({
       user: {
-        id: user.id,
+        id: userId,
         email: user.email,
         displayName: user.display_name,
         isPremium: user.is_premium,
@@ -132,21 +134,21 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     await user.update({ last_login: new Date() });
 
     // Создаем токены
-    const { accessToken, refreshToken } = generateTokens(user.id);
+    const { accessToken, refreshToken } = generateTokens(user.get('id'));
 
     // Сохраняем refresh токен
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
     await RefreshToken.create({
-      user_id: user.id,
+      user_id: user.get('id'),
       token: refreshToken,
       expires_at: expiresAt,
     });
 
     res.json({
       user: {
-        id: user.id,
+        id: user.get('id'),
         email: user.email,
         displayName: user.display_name,
         isPremium: user.is_premium,
@@ -207,14 +209,14 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
     await storedToken.destroy();
 
     // Создаем новые токены
-    const tokens = generateTokens(user.id);
+    const tokens = generateTokens(user.get('id'));
 
     // Сохраняем новый refresh токен
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
     await RefreshToken.create({
-      user_id: user.id,
+      user_id: user.get('id'),
       token: tokens.refreshToken,
       expires_at: expiresAt,
     });
@@ -267,25 +269,27 @@ export const guestLogin = async (req: Request, res: Response): Promise<void> => 
       is_guest: true,
     });
 
+    const userId = user.get('id');
+
     // Создаем токены
-    const { accessToken, refreshToken } = generateTokens(user.id);
+    const { accessToken, refreshToken } = generateTokens(userId);
 
     // Сохраняем refresh токен
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
     await RefreshToken.create({
-      user_id: user.id,
+      user_id: userId,
       token: refreshToken,
       expires_at: expiresAt,
     });
 
     // Создаем начальные данные
-    await initializeUserData(user.id);
+    await initializeUserData(userId);
 
     res.json({
       user: {
-        id: user.id,
+        id: userId,
         email: user.email,
         displayName: user.display_name,
         isPremium: user.is_premium,
@@ -328,29 +332,31 @@ export const googleLogin = async (req: Request, res: Response): Promise<void> =>
         });
 
         // Создаем начальные данные
-        await initializeUserData(user.id);
+        await initializeUserData(user.get('id'));
       }
     }
+
+    const userId = user.get('id');
 
     // Обновляем последний вход
     await user.update({ last_login: new Date() });
 
     // Создаем токены
-    const { accessToken, refreshToken } = generateTokens(user.id);
+    const { accessToken, refreshToken } = generateTokens(userId);
 
     // Сохраняем refresh токен
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
     await RefreshToken.create({
-      user_id: user.id,
+      user_id: userId,
       token: refreshToken,
       expires_at: expiresAt,
     });
 
     res.json({
       user: {
-        id: user.id,
+        id: userId,
         email: user.email,
         displayName: user.display_name,
         isPremium: user.is_premium,
