@@ -5,8 +5,8 @@ export interface RefreshTokenAttributes {
   user_id: string;
   token: string;
   expires_at: Date;
-  created_at: Date;
-  updated_at: Date;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export interface RefreshTokenCreationAttributes extends Optional<RefreshTokenAttributes, 
@@ -47,14 +47,6 @@ export const initRefreshToken = (sequelize: Sequelize): typeof RefreshToken => {
         type: DataTypes.DATE,
         allowNull: false,
       },
-      created_at: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
     },
     {
       sequelize,
@@ -81,8 +73,8 @@ export interface RefreshTokenAttributes {
   user_id: string;
   token: string;
   expires_at: Date;
-  created_at: Date;
-  updated_at: Date;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export interface RefreshTokenCreationAttributes extends Optional<RefreshTokenAttributes, 
