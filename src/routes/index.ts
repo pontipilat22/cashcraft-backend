@@ -5,6 +5,7 @@ import transactionsRoutes from './transactions.routes';
 import categoriesRoutes from './categories.routes';
 import debtsRoutes from './debts.routes';
 import exchangeRateRoutes from './exchangeRate.routes';
+import syncRoutes from './sync.routes';
 
 const router = Router();
 
@@ -29,6 +30,7 @@ router.get('/', (req, res) => {
       transactions: '/api/v1/transactions',
       categories: '/api/v1/categories',
       debts: '/api/v1/debts',
+      sync: '/api/v1/sync',
     }
   });
 });
@@ -40,6 +42,7 @@ router.use('/transactions', transactionsRoutes);
 router.use('/categories', categoriesRoutes);
 router.use('/debts', debtsRoutes);
 router.use('/exchange-rates', exchangeRateRoutes);
+router.use('/sync', syncRoutes);
 
 export default router;
 
