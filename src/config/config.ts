@@ -57,7 +57,7 @@ const config: Config = {
   jwt: {
     secret: process.env.JWT_SECRET || 'your-secret-key',
     refreshSecret: process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key',
-    expiresIn: process.env.JWT_EXPIRES_IN || '15m',
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
   cors: {
@@ -76,4 +76,4 @@ const config: Config = {
   },
 };
 
-export default config;
+export default config; 
