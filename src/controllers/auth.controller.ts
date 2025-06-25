@@ -388,10 +388,8 @@ export const googleLogin = async (req: Request, res: Response): Promise<void> =>
 // Сброс всех данных пользователя
 export const resetUserData = async (req: AuthRequest, res: Response): Promise<void> => {
   const transaction = await sequelize.transaction();
-  
   try {
     const userId = req.userId;
-    
     if (!userId) {
       await transaction.rollback();
       res.status(401).json({ error: 'Unauthorized' });
@@ -400,8 +398,6 @@ export const resetUserData = async (req: AuthRequest, res: Response): Promise<vo
 
     console.log(`[ResetData] Resetting all data for user: ${userId}`);
 
-    // Удаляем все данные пользователя в правильном порядке (из-за foreign keys)
-    
     // 1. Удаляем все транзакции пользователя
     const deletedTransactions = await Transaction.destroy({
       where: { user_id: userId },
@@ -416,14 +412,14 @@ export const resetUserData = async (req: AuthRequest, res: Response): Promise<vo
     });
     console.log(`[ResetData] Deleted ${deletedDebts} debts`);
 
-    // 3. Удаляем все пользовательские категории (не системные)
+    // 3. Удаляем ВСЕ категории пользователя (и системные, и пользовательские)
     const deletedCategories = await Category.destroy({
-      where: { user_id: userId, is_system: false },
+      where: { user_id: userId },
       transaction,
     });
-    console.log(`[ResetData] Deleted ${deletedCategories} custom categories`);
+    console.log(`[ResetData] Deleted ${deletedCategories} categories (all)`);
 
-    // 4. Удаляем все счета пользователя (кроме дефолтного)
+    // 4. Удаляем все счета пользователя
     const deletedAccounts = await Account.destroy({
       where: { user_id: userId },
       transaction,
@@ -446,7 +442,9 @@ export const resetUserData = async (req: AuthRequest, res: Response): Promise<vo
 
     await transaction.commit();
 
-    console.log(`[ResetData] Successfully reset all data for user: ${userId}`);
+    // 7. После сброса создаём дефолтные категории и счет
+    await initializeUserData(userId);
+    console.log(`[ResetData] Initialized default categories and account for user: ${userId}`);
 
     res.json({
       message: 'All user data reset successfully',
