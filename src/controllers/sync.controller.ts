@@ -38,6 +38,12 @@ export const syncController = {
       /* 1. Accounts ──────────────────────────────────────────────────────────────────────── */
       if (data.accounts?.length) {
         for (const acc of data.accounts) {
+          // Валидация account_id
+          if (!acc.id || typeof acc.id !== 'string') {
+            console.warn('[Sync] Skipping account with invalid id:', acc);
+            continue;
+          }
+          
           await Account.upsert(
             { ...acc, user_id: userId, synced_at: new Date() },
             { transaction: t }
@@ -48,6 +54,12 @@ export const syncController = {
       /* 2. Categories (идут ДО транзакций!) ─────────────────────────────────────────────── */
       if (data.categories?.length) {
         for (const cat of data.categories) {
+          // Валидация category_id
+          if (!cat.id || typeof cat.id !== 'string') {
+            console.warn('[Sync] Skipping category with invalid id:', cat);
+            continue;
+          }
+          
           await Category.upsert(
             { ...cat, user_id: userId, synced_at: new Date() },
             { transaction: t }
@@ -58,16 +70,43 @@ export const syncController = {
       /* 3. Transactions ─────────────────────────────────────────────────────────────────── */
       if (data.transactions?.length) {
         for (const trx of data.transactions) {
-          await Transaction.upsert(
-            { ...trx, user_id: userId, synced_at: new Date() },
-            { transaction: t }
-          );
+          // Валидация transaction_id и account_id
+          if (!trx.id || typeof trx.id !== 'string') {
+            console.warn('[Sync] Skipping transaction with invalid id:', trx);
+            continue;
+          }
+          
+          if (!trx.account_id || typeof trx.account_id !== 'string') {
+            console.warn('[Sync] Skipping transaction with invalid account_id:', trx);
+            continue;
+          }
+          
+          // Валидация category_id - если это не UUID, устанавливаем undefined
+          const isValidUUID = (str: string) => {
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            return uuidRegex.test(str);
+          };
+          
+          const cleanTransaction = {
+            ...trx,
+            category_id: trx.category_id && isValidUUID(trx.category_id) ? trx.category_id : undefined,
+            user_id: userId,
+            synced_at: new Date()
+          };
+          
+          await Transaction.upsert(cleanTransaction, { transaction: t });
         }
       }
 
       /* 4. Debts ─────────────────────────────────────────────────────────────────────────── */
       if (data.debts?.length) {
         for (const debt of data.debts) {
+          // Валидация debt_id
+          if (!debt.id || typeof debt.id !== 'string') {
+            console.warn('[Sync] Skipping debt with invalid id:', debt);
+            continue;
+          }
+          
           await Debt.upsert(
             { ...debt, user_id: userId, synced_at: new Date() },
             { transaction: t }
