@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { User, RefreshToken, Account, Category } from '../models';
+import { User, RefreshToken, Account, Category, Transaction, Debt, ExchangeRate } from '../models';
 import config from '../config/config';
 import { Op } from 'sequelize';
+import sequelize from '../config/database';
+import { AuthRequest } from '../middleware/auth';
 
 // Генерация токенов
 const generateTokens = (userId: string) => {
@@ -379,6 +381,87 @@ export const googleLogin = async (req: Request, res: Response): Promise<void> =>
     });
   } catch (error) {
     console.error('Google login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Сброс всех данных пользователя
+export const resetUserData = async (req: AuthRequest, res: Response): Promise<void> => {
+  const transaction = await sequelize.transaction();
+  
+  try {
+    const userId = req.userId;
+    
+    if (!userId) {
+      await transaction.rollback();
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    console.log(`[ResetData] Resetting all data for user: ${userId}`);
+
+    // Удаляем все данные пользователя в правильном порядке (из-за foreign keys)
+    
+    // 1. Удаляем все транзакции пользователя
+    const deletedTransactions = await Transaction.destroy({
+      where: { user_id: userId },
+      transaction,
+    });
+    console.log(`[ResetData] Deleted ${deletedTransactions} transactions`);
+
+    // 2. Удаляем все долги пользователя
+    const deletedDebts = await Debt.destroy({
+      where: { user_id: userId },
+      transaction,
+    });
+    console.log(`[ResetData] Deleted ${deletedDebts} debts`);
+
+    // 3. Удаляем все пользовательские категории (не системные)
+    const deletedCategories = await Category.destroy({
+      where: { user_id: userId, is_system: false },
+      transaction,
+    });
+    console.log(`[ResetData] Deleted ${deletedCategories} custom categories`);
+
+    // 4. Удаляем все счета пользователя (кроме дефолтного)
+    const deletedAccounts = await Account.destroy({
+      where: { user_id: userId },
+      transaction,
+    });
+    console.log(`[ResetData] Deleted ${deletedAccounts} accounts`);
+
+    // 5. Удаляем все пользовательские курсы валют
+    const deletedExchangeRates = await ExchangeRate.destroy({
+      where: { user_id: userId },
+      transaction,
+    });
+    console.log(`[ResetData] Deleted ${deletedExchangeRates} exchange rates`);
+
+    // 6. Удаляем все refresh токены пользователя
+    const deletedRefreshTokens = await RefreshToken.destroy({
+      where: { user_id: userId },
+      transaction,
+    });
+    console.log(`[ResetData] Deleted ${deletedRefreshTokens} refresh tokens`);
+
+    await transaction.commit();
+
+    console.log(`[ResetData] Successfully reset all data for user: ${userId}`);
+
+    res.json({
+      message: 'All user data reset successfully',
+      deleted: {
+        transactions: deletedTransactions,
+        debts: deletedDebts,
+        categories: deletedCategories,
+        accounts: deletedAccounts,
+        exchangeRates: deletedExchangeRates,
+        refreshTokens: deletedRefreshTokens,
+      }
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Reset user data error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

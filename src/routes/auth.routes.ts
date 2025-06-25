@@ -64,5 +64,12 @@ router.post(
   authController.logout
 );
 
+// Сброс всех данных пользователя
+router.post(
+  '/reset-data',
+  [],
+  validate,
+  authController.resetUserData
+);
 
 export default router;
