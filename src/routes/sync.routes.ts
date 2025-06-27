@@ -1,19 +1,19 @@
+
 import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
-import { syncController } from '../controllers/sync.controller';
+import { authenticate } from '../middleware/auth';   // AuthRequest убрали
 
-const router = Router();
+ import {
+   syncData,
+   downloadData,
+   wipeData,
+   getSyncStatus,
+ } from '../controllers/sync.controller';
 
-// Все маршруты требуют аутентификации
-router.use(authenticate);
+ const router = Router();
 
-// Синхронизация данных (отправка на сервер)
-router.post('/', syncController.syncData);
+ router.post   ('/upload',   authenticate, syncData);       // PUSH
+ router.get    ('/download', authenticate, downloadData);   // PULL
+ router.delete ('/wipe',     authenticate, wipeData);       // ⚡ полный сброс
+ router.get    ('/status',   authenticate, getSyncStatus);  // инфо
 
-// Загрузка данных с сервера
-router.get('/download', syncController.downloadData);
-
-// Получение статуса синхронизации
-router.get('/status', syncController.getSyncStatus);
-
-export default router; 
+ export default router;

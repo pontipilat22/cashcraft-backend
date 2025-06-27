@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/auth';
 import { Account, Transaction, Category, Debt /*, ExchangeRate */ } from '../models';
 import { Op, Sequelize } from 'sequelize';
 
+
 // 👇  если sequelize экспортируется из models/index.ts — так; иначе поправь путь
 import { sequelize } from '../models';
 
@@ -153,6 +154,8 @@ export const syncController = {
       userId,
     });
   },
+
+  
 
   /* ───────────────────────────────  STATUS (не менялся) ─────────────────────────────────── */
   getSyncStatus: async (req: AuthRequest, res: Response): Promise<void> => {
