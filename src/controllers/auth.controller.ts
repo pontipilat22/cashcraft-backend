@@ -463,3 +463,41 @@ export const resetUserData = async (req: AuthRequest, res: Response): Promise<vo
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// Полный сброс всех пользовательских данных
+export const fullResetUserData = async (req: AuthRequest, res: Response): Promise<void> => {
+  const transaction = await sequelize.transaction();
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      await transaction.rollback();
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    console.log(`[FullReset] Deleting ALL user data for user: ${userId}`);
+
+    const deletedTransactions = await Transaction.destroy({ where: { user_id: userId }, transaction });
+    const deletedDebts = await Debt.destroy({ where: { user_id: userId }, transaction });
+    const deletedCategories = await Category.destroy({ where: { user_id: userId }, transaction });
+    const deletedAccounts = await Account.destroy({ where: { user_id: userId }, transaction });
+    const deletedExchangeRates = await ExchangeRate.destroy({ where: { user_id: userId }, transaction });
+
+    await transaction.commit();
+
+    res.json({
+      message: 'All user data fully deleted',
+      deleted: {
+        transactions: deletedTransactions,
+        debts: deletedDebts,
+        categories: deletedCategories,
+        accounts: deletedAccounts,
+        exchangeRates: deletedExchangeRates,
+      }
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Full reset user data error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
