@@ -78,10 +78,41 @@ const startServer = async () => {
 
     await ExchangeRateService.initialize();
 
-    app.listen(config.server.port, '0.0.0.0', () => {
+    const server = app.listen(config.server.port, '0.0.0.0', () => {
       console.log(`✅ Server is running on http://0.0.0.0:${config.server.port}`);
       console.log(`🌱 Environment: ${config.server.nodeEnv}`);
     });
+
+    // Graceful shutdown
+    const gracefulShutdown = async (signal: string) => {
+      console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
+      
+      server.close(async () => {
+        console.log('📡 HTTP server closed');
+        
+        try {
+          await sequelize.close();
+          console.log('🗄️ Database connection closed');
+          console.log('✅ Graceful shutdown completed');
+          process.exit(0);
+        } catch (error) {
+          console.error('❌ Error during shutdown:', error);
+          process.exit(1);
+        }
+      });
+
+      // Force shutdown after 30 seconds
+      setTimeout(() => {
+        console.error('⏰ Could not close connections in time, forcefully shutting down');
+        process.exit(1);
+      }, 30000);
+    };
+
+    // Handle termination signals
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2')); // nodemon restart
+
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);
