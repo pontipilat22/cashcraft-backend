@@ -2,7 +2,10 @@ version: '3.8'
 
 services:
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.multi-stage
+      target: production
     ports:
       - "3000:3000"
     environment:
