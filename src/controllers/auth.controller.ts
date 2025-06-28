@@ -25,6 +25,18 @@ const generateTokens = (userId: string) => {
 
 // Инициализация данных пользователя
 const initializeUserData = async (userId: string): Promise<void> => {
+  // Проверяем, есть ли у пользователя уже какие-либо данные
+  const existingAccounts = await Account.count({ where: { user_id: userId } });
+  const existingCategories = await Category.count({ where: { user_id: userId } });
+  
+  // Если у пользователя уже есть данные, не создаем дефолтные
+  if (existingAccounts > 0 || existingCategories > 0) {
+    console.log(`[initializeUserData] User ${userId} already has data (${existingAccounts} accounts, ${existingCategories} categories), skipping default creation`);
+    return;
+  }
+
+  console.log(`[initializeUserData] Creating default data for new user: ${userId}`);
+
   // Создаем дефолтные категории
   const defaultCategories = [
     { name: 'Продукты', icon: '🛒', color: '#FF6B6B', type: 'expense' },
@@ -442,9 +454,8 @@ export const resetUserData = async (req: AuthRequest, res: Response): Promise<vo
 
     await transaction.commit();
 
-    // 7. После сброса создаём дефолтные категории и счет
-    await initializeUserData(userId);
-    console.log(`[ResetData] Initialized default categories and account for user: ${userId}`);
+    // 7. После сброса НЕ создаём дефолтные данные - пользователь сам решит что создавать
+    console.log(`[ResetData] Data reset completed for user: ${userId}. User can now create their own accounts and categories.`);
 
     res.json({
       message: 'All user data reset successfully',

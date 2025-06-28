@@ -23,6 +23,7 @@ export const getAccounts = async (req: AuthRequest, res: Response): Promise<void
 export const createAccount = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
+      id,
       name,
       type,
       balance = 0,
@@ -62,7 +63,40 @@ export const createAccount = async (req: AuthRequest, res: Response): Promise<vo
       );
     }
 
+    // Проверяем, существует ли уже счет с таким id
+    if (id) {
+      const existingAccount = await Account.findOne({
+        where: { id, user_id: req.userId },
+      });
+
+      if (existingAccount) {
+        // Обновляем существующий счет
+        await existingAccount.update({
+          name,
+          type,
+          balance,
+          currency,
+          card_number: cardNumber,
+          color,
+          icon,
+          is_default: isDefault,
+          is_included_in_total: isIncludedInTotal,
+          target_amount: targetAmount,
+          credit_start_date: creditStartDate,
+          credit_term: creditTerm,
+          credit_rate: creditRate,
+          credit_payment_type: creditPaymentType,
+          credit_initial_amount: creditInitialAmount,
+          synced_at: new Date(), // Помечаем как синхронизированный
+        });
+
+        res.json(existingAccount);
+        return;
+      }
+    }
+
     const account = await Account.create({
+      id: id || undefined,
       user_id: req.userId!,
       name,
       type,
@@ -79,6 +113,7 @@ export const createAccount = async (req: AuthRequest, res: Response): Promise<vo
       credit_rate: creditRate,
       credit_payment_type: creditPaymentType,
       credit_initial_amount: creditInitialAmount,
+      synced_at: new Date(), // Помечаем как синхронизированный
     });
 
     res.status(201).json(account);

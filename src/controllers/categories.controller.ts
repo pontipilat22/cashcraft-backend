@@ -26,7 +26,7 @@ export const getCategories = async (req: AuthRequest, res: Response): Promise<vo
 // Создание пользовательской категории
 export const createCategory = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, type, icon, color } = req.body;
+    const { id, name, type, icon, color } = req.body;
 
     // Проверяем лимит категорий для бесплатных пользователей
     if (!req.user?.isPremiumActive()) {
@@ -42,7 +42,29 @@ export const createCategory = async (req: AuthRequest, res: Response): Promise<v
       }
     }
 
+    // Проверяем, существует ли уже категория с таким id
+    if (id) {
+      const existingCategory = await Category.findOne({
+        where: { id, user_id: req.userId },
+      });
+
+      if (existingCategory) {
+        // Обновляем существующую категорию
+        await existingCategory.update({
+          name,
+          type,
+          icon,
+          color,
+          is_system: false,
+        });
+
+        res.json(existingCategory);
+        return;
+      }
+    }
+
     const category = await Category.create({
+      id: id || undefined, // Используем переданный id или генерируем новый
       user_id: req.userId!,
       name,
       type,

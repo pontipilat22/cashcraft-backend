@@ -86,6 +86,7 @@ export const createTransaction = async (req: AuthRequest, res: Response): Promis
   
   try {
     const {
+      id,
       accountId,
       categoryId,
       amount,
@@ -134,8 +135,44 @@ export const createTransaction = async (req: AuthRequest, res: Response): Promis
       }
     }
 
+    // Проверяем, существует ли уже транзакция с таким id
+    if (id) {
+      const existingTransaction = await Transaction.findOne({
+        where: { id, user_id: req.userId },
+        transaction: t,
+      });
+
+      if (existingTransaction) {
+        // Обновляем существующую транзакцию
+        await existingTransaction.update({
+          account_id: accountId,
+          category_id: categoryId,
+          amount,
+          type,
+          date: new Date(date),
+          description,
+          to_account_id: toAccountId,
+        }, { transaction: t });
+
+        await t.commit();
+
+        // Возвращаем обновленную транзакцию с включенными связями
+        const updatedTransaction = await Transaction.findByPk(existingTransaction.id, {
+          include: [
+            { model: Account, as: 'account' },
+            { model: Account, as: 'toAccount' },
+            { model: Category, as: 'category' }
+          ]
+        });
+
+        res.json(updatedTransaction);
+        return;
+      }
+    }
+
     // Создаем транзакцию
     const transaction = await Transaction.create({
+      id: id || undefined,
       user_id: req.userId!,
       account_id: accountId,
       category_id: categoryId,

@@ -21,9 +21,31 @@ export const getDebts = async (req: AuthRequest, res: Response): Promise<void> =
 // Создание нового долга
 export const createDebt = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { type, name, amount, isIncludedInTotal = true, dueDate } = req.body;
+    const { id, type, name, amount, isIncludedInTotal = true, dueDate } = req.body;
+
+    // Проверяем, существует ли уже долг с таким id
+    if (id) {
+      const existingDebt = await Debt.findOne({
+        where: { id, user_id: req.userId },
+      });
+
+      if (existingDebt) {
+        // Обновляем существующий долг
+        await existingDebt.update({
+          type,
+          name,
+          amount,
+          is_included_in_total: isIncludedInTotal,
+          due_date: dueDate ? new Date(dueDate) : undefined,
+        });
+
+        res.json(existingDebt);
+        return;
+      }
+    }
 
     const debt = await Debt.create({
+      id: id || undefined, // Используем переданный id или генерируем новый
       user_id: req.userId!,
       type,
       name,
