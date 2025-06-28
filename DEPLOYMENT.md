@@ -2,7 +2,7 @@
 
 ## 🐳 Docker развертывание
 
-### 1. Сборка и запуск
+### Вариант 1: Простая сборка (Dockerfile)
 
 ```bash
 # Сборка образа
@@ -18,10 +18,26 @@ docker run -d \
   cashcraft-backend
 ```
 
+### Вариант 2: Оптимизированная сборка (Dockerfile.multi-stage)
+
+```bash
+# Сборка образа с многоэтапной сборкой
+docker build -f Dockerfile.multi-stage -t cashcraft-backend .
+
+# Запуск контейнера
+docker run -d \
+  --name cashcraft-backend \
+  -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e DATABASE_URL=your_database_url \
+  -e JWT_SECRET=your_jwt_secret \
+  cashcraft-backend
+```
+
 ### 2. Использование docker-compose
 
 ```bash
-# Запуск
+# Запуск (использует многоэтапную сборку)
 docker-compose up -d
 
 # Просмотр логов
@@ -49,7 +65,7 @@ CORS_ORIGIN=https://your-frontend-domain.com
 
 ```bash
 # Установка зависимостей
-npm ci --only=production --omit=dev
+npm ci
 
 # Сборка TypeScript
 npm run build
@@ -104,6 +120,18 @@ curl http://localhost:3000/ping
 
 ## 🔍 Troubleshooting
 
+### Проблема: tsc: not found
+
+**Решение**: Используйте правильный Dockerfile или многоэтапную сборку
+
+```bash
+# Для Railway/Production
+docker build -f Dockerfile.multi-stage -t cashcraft-backend .
+
+# Или простой вариант
+docker build -t cashcraft-backend .
+```
+
 ### Проблема: npm warn config production
 
 **Решение**: Используйте `--omit=dev` вместо `--production`
@@ -142,4 +170,17 @@ docker stats cashcraft-backend
 
 # Логи в реальном времени
 docker logs -f cashcraft-backend
-``` 
+```
+
+## 🏗️ Различия между Dockerfile
+
+### Dockerfile (простой)
+- ✅ Простая сборка
+- ⚠️ Больший размер образа
+- ✅ Быстрая сборка
+
+### Dockerfile.multi-stage (оптимизированный)
+- ✅ Меньший размер образа
+- ✅ Только production зависимости
+- ⚠️ Более сложная сборка
+- ✅ Рекомендуется для production 

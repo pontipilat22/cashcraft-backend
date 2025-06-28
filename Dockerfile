@@ -22,6 +22,9 @@ RUN rm -rf src
 # Удаляем dev dependencies после сборки
 RUN npm prune --production
 
+# Делаем скрипт запуска исполняемым
+RUN chmod +x start.sh
+
 # Создаем пользователя для безопасности
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
@@ -40,5 +43,5 @@ ENV PORT=3000
 # Graceful shutdown
 STOPSIGNAL SIGTERM
 
-# Запускаем приложение
-CMD ["node", "dist/index.js"] 
+# Запускаем приложение через скрипт
+CMD ["./start.sh"] 
