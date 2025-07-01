@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { ExchangeRateService } from '../services/exchangeRate.service';
 import ExchangeRate from '../models/ExchangeRate';
 import { successResponse, errorResponse } from '../utils/response';
-import { AuthRequest } from '../middleware/auth';
 
 /**
  * Получить курс валюты
@@ -72,27 +71,23 @@ export const updateRates = async (req: Request, res: Response) => {
   }
 };
 
-// Получение всех курсов пользователя
-export const getUserExchangeRates = async (req: AuthRequest, res: Response) => {
+// Получение всех курсов (глобальные)
+export const getAllExchangeRates = async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
-    
     const rates = await ExchangeRate.findAll({
-      where: { user_id: userId },
       order: [['from_currency', 'ASC'], ['to_currency', 'ASC']],
     });
     
     return successResponse(res, { rates }, 200);
   } catch (error: any) {
-    console.error('Get user exchange rates error:', error);
-    return errorResponse(res, 'Failed to fetch user exchange rates', 500);
+    console.error('Get all exchange rates error:', error);
+    return errorResponse(res, 'Failed to fetch exchange rates', 500);
   }
 };
 
-// Сохранение или обновление курса пользователя
-export const saveUserExchangeRate = async (req: AuthRequest, res: Response) => {
+// Сохранение или обновление курса (глобальный)
+export const saveExchangeRate = async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
     const { from_currency, to_currency, rate, mode = 'manual' } = req.body;
     
     if (!from_currency || !to_currency || !rate) {
@@ -109,7 +104,6 @@ export const saveUserExchangeRate = async (req: AuthRequest, res: Response) => {
     
     // Используем upsert для создания или обновления
     const [exchangeRate, created] = await ExchangeRate.upsert({
-      user_id: userId,
       from_currency,
       to_currency,
       rate,
@@ -127,20 +121,18 @@ export const saveUserExchangeRate = async (req: AuthRequest, res: Response) => {
       200
     );
   } catch (error: any) {
-    console.error('Save user exchange rate error:', error);
+    console.error('Save exchange rate error:', error);
     return errorResponse(res, 'Failed to save exchange rate', 500);
   }
 };
 
-// Удаление курса пользователя
-export const deleteUserExchangeRate = async (req: AuthRequest, res: Response) => {
+// Удаление курса (глобальный)
+export const deleteExchangeRate = async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
     const { from_currency, to_currency } = req.params;
     
     const deleted = await ExchangeRate.destroy({
       where: {
-        user_id: userId,
         from_currency,
         to_currency,
       },
@@ -152,25 +144,24 @@ export const deleteUserExchangeRate = async (req: AuthRequest, res: Response) =>
     
     return successResponse(res, { message: 'Exchange rate deleted successfully' }, 200);
   } catch (error: any) {
-    console.error('Delete user exchange rate error:', error);
+    console.error('Delete exchange rate error:', error);
     return errorResponse(res, 'Failed to delete exchange rate', 500);
   }
 };
 
-// Установка режима курсов (auto/manual)
-export const setExchangeRateMode = async (req: AuthRequest, res: Response) => {
+// Установка режима курсов (auto/manual) - глобальный
+export const setExchangeRateMode = async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
     const { mode } = req.body;
     
     if (!mode || !['auto', 'manual'].includes(mode)) {
       return errorResponse(res, 'Invalid mode. Must be "auto" or "manual"', 400);
     }
     
-    // Обновляем все курсы пользователя
+    // Обновляем все курсы
     await ExchangeRate.update(
       { mode },
-      { where: { user_id: userId } }
+      { where: {} }
     );
     
     return successResponse(res, { mode, message: 'Exchange rate mode updated' }, 200);

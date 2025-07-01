@@ -3,7 +3,7 @@ import sequelize from '../config/database';
 
 interface ExchangeRateAttributes {
   id: number;
-  user_id: string;
+  user_id?: string;
   from_currency: string;
   to_currency: string;
   rate: number;
@@ -12,11 +12,11 @@ interface ExchangeRateAttributes {
   updated_at?: Date;
 }
 
-interface ExchangeRateCreationAttributes extends Optional<ExchangeRateAttributes, 'id' | 'created_at' | 'updated_at'> {}
+interface ExchangeRateCreationAttributes extends Optional<ExchangeRateAttributes, 'id' | 'user_id' | 'created_at' | 'updated_at'> {}
 
 class ExchangeRate extends Model<ExchangeRateAttributes, ExchangeRateCreationAttributes> implements ExchangeRateAttributes {
   public id!: number;
-  public user_id!: string;
+  public user_id?: string;
   public from_currency!: string;
   public to_currency!: string;
   public rate!: number;
@@ -34,7 +34,7 @@ ExchangeRate.init(
     },
     user_id: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'users',
         key: 'id',
@@ -77,7 +77,7 @@ ExchangeRate.init(
     indexes: [
       {
         unique: true,
-        fields: ['user_id', 'from_currency', 'to_currency'],
+        fields: ['from_currency', 'to_currency'],
       },
     ],
   }

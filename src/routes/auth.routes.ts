@@ -35,33 +35,12 @@ router.post('/guest', authController.guestLogin);
 router.post(
   '/google',
   [
-    body('idToken').notEmpty().withMessage('Google ID token is required'),
     body('email').isEmail().normalizeEmail(),
-    body('name').optional().trim(),
+    body('displayName').optional().trim(),
     body('googleId').notEmpty().withMessage('Google ID is required'),
   ],
   validate,
   authController.googleLogin
-);
-
-// Обновление токена
-router.post(
-  '/refresh',
-  [
-    body('refreshToken').notEmpty(),
-  ],
-  validate,
-  authController.refreshToken
-);
-
-// Выход
-router.post(
-  '/logout',
-  [
-    body('refreshToken').optional(),
-  ],
-  validate,
-  authController.logout
 );
 
 // Сброс всех данных пользователя

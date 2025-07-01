@@ -1,14 +1,13 @@
 import { Router } from 'express';
 import { 
   getExchangeRate, 
-  getUserExchangeRates,
-  saveUserExchangeRate,
-  deleteUserExchangeRate,
+  getAllExchangeRates,
+  saveExchangeRate,
+  deleteExchangeRate,
   setExchangeRateMode,
   getLastUpdate, 
   updateRates 
 } from '../controllers/exchangeRate.controller';
-import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
@@ -17,10 +16,10 @@ router.get('/rate', async (req, res) => { await getExchangeRate(req, res); });
 router.get('/last-update', async (req, res) => { await getLastUpdate(req, res); });
 router.post('/update', async (req, res) => { await updateRates(req, res); });
 
-// Защищенные роуты (пользовательские курсы)
-router.get('/user', authenticate, async (req, res) => { await getUserExchangeRates(req as any, res); });
-router.post('/user', authenticate, async (req, res) => { await saveUserExchangeRate(req as any, res); });
-router.delete('/user/:from_currency/:to_currency', authenticate, async (req, res) => { await deleteUserExchangeRate(req as any, res); });
-router.put('/user/mode', authenticate, async (req, res) => { await setExchangeRateMode(req as any, res); });
+// Глобальные роуты (курсы для всех)
+router.get('/all', async (req, res) => { await getAllExchangeRates(req, res); });
+router.post('/save', async (req, res) => { await saveExchangeRate(req, res); });
+router.delete('/:from_currency/:to_currency', async (req, res) => { await deleteExchangeRate(req, res); });
+router.put('/mode', async (req, res) => { await setExchangeRateMode(req, res); });
 
 export default router;
