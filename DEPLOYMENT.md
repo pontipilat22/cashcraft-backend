@@ -109,14 +109,33 @@ curl http://localhost:3000/ping
 - `SIGINT` - Ctrl+C
 - `SIGUSR2` - перезапуск nodemon
 
+### Логи при запуске:
+
+```
+🚀 Starting CashCraft Backend...
+✅ Database connection has been established successfully.
+Database models synchronized
+Initializing exchange rate service...
+Currency rates are up to date
+✅ Server is running on http://0.0.0.0:3000
+🌱 Environment: production
+```
+
 ### Логи при завершении:
 
 ```
-🛑 Received SIGTERM. Starting graceful shutdown...
+🛑 Received shutdown signal. Starting graceful shutdown...
 📡 HTTP server closed
 🗄️ Database connection closed
 ✅ Graceful shutdown completed
 ```
+
+### Преимущества нового подхода:
+
+- ✅ Нет npm ошибок при остановке
+- ✅ Чистые логи завершения
+- ✅ Корректное закрытие соединений с БД
+- ✅ Правильная обработка сигналов
 
 ## 🔍 Troubleshooting
 

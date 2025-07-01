@@ -39,13 +39,36 @@ export const syncData = async (req: AuthRequest, res: Response): Promise<void> =
     deb: data?.debts?.length ?? 0,
   });
 
+  // Логируем детали данных для отладки
+  if (data?.accounts?.length) {
+    console.log('[Sync→] Accounts sample:', data.accounts[0]);
+  }
+  if (data?.categories?.length) {
+    console.log('[Sync→] Categories sample:', data.categories[0]);
+  }
+  if (data?.transactions?.length) {
+    console.log('[Sync→] Transactions sample:', data.transactions[0]);
+  }
+  if (data?.debts?.length) {
+    console.log('[Sync→] Debts sample:', data.debts[0]);
+  }
+
   const t = await sequelize.transaction();
   try {
     /* 1. Accounts */
     if (data.accounts?.length) {
+      console.log('[Sync→] Processing accounts:', data.accounts.length);
       for (const acc of data.accounts) {
-        if (!acc.id || typeof acc.id !== 'string') continue;
-        await Account.upsert({ ...acc, user_id: userId, synced_at: new Date() }, { transaction: t });
+        if (!acc.id || typeof acc.id !== 'string') {
+          console.log('[Sync→] Skipping account without valid id:', acc);
+          continue;
+        }
+        try {
+          await Account.upsert({ ...acc, user_id: userId, synced_at: new Date() }, { transaction: t });
+        } catch (accError) {
+          console.error('[Sync→] Error upserting account:', acc, 'Error:', accError);
+          throw accError;
+        }
       }
     }
 
@@ -90,7 +113,8 @@ export const syncData = async (req: AuthRequest, res: Response): Promise<void> =
     res.json({ success: true, syncTime: new Date().toISOString() });
   } catch (err) {
     await t.rollback();
-    console.error('[Sync×]', err);
+    console.error('[Sync×] Error details:', err);
+    console.error('[Sync×] Error stack:', err instanceof Error ? err.stack : 'No stack trace');
     res.status(500).json({ error: 'Sync failed' });
   }
 };
