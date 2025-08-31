@@ -1,11 +1,11 @@
-# RAILWAY BACKEND BUILD - ROOT LEVEL
+# RAILWAY BACKEND BUILD - BACKEND DIRECTORY
 FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Copy backend package files
-COPY backend/package*.json ./
+# Copy package files from current directory
+COPY package*.json ./
 
 # Install ALL dependencies including dev for TypeScript build
 RUN npm ci
@@ -14,8 +14,8 @@ RUN npm ci
 RUN npm list typescript
 RUN npx tsc --version
 
-# Copy backend source code
-COPY backend/ ./
+# Copy source code from current directory
+COPY . ./
 
 # Build TypeScript using npx to ensure tsc is available
 RUN npx tsc
