@@ -42,7 +42,8 @@
     "node-cron": "^4.1.0",
     "pg": "^8.16.0",
     "sequelize": "^6.37.7",
-    "sequelize-cli": "^6.6.3"
+    "sequelize-cli": "^6.6.3",
+    "typescript": "^5.8.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
@@ -54,7 +55,6 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.0.1",
     "nodemon": "^3.1.10",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "ts-node": "^10.9.2"
   }
 }
