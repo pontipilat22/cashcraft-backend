@@ -1,5 +1,5 @@
-# Используем официальный Node.js образ
-FROM node:18-alpine
+# Build stage
+FROM node:18-alpine AS builder
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
@@ -16,11 +16,23 @@ COPY . .
 # Собираем TypeScript
 RUN npm run build
 
-# Удаляем исходный код TypeScript (оставляем только dist)
-RUN rm -rf src
+# Production stage
+FROM node:18-alpine AS production
 
-# Удаляем dev dependencies после сборки
-RUN npm prune --production
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Копируем package.json и package-lock.json
+COPY package*.json ./
+
+# Устанавливаем только production зависимости
+RUN npm ci --only=production --omit=dev
+
+# Копируем собранный код из builder stage
+COPY --from=builder /app/dist ./dist
+
+# Копируем скрипт запуска
+COPY start.sh ./
 
 # Делаем скрипт запуска исполняемым
 RUN chmod +x start.sh
