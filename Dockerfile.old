@@ -1,21 +1,17 @@
-# RAILWAY BACKEND BUILD - ROOT LEVEL
+# RAILWAY FORCE REBUILD - SIMPLE VERSION V5
 FROM node:18-alpine
 
-# Set working directory
+# CRITICAL: Install ALL dependencies including dev for TypeScript build
 WORKDIR /app
-
-# Copy backend package files
-COPY backend/package*.json ./
-
-# Install ALL dependencies including dev for TypeScript build
+COPY package*.json ./
 RUN npm ci
 
 # Debug: Check TypeScript installation
 RUN npm list typescript
 RUN npx tsc --version
 
-# Copy backend source code
-COPY backend/ ./
+# Copy source code
+COPY . .
 
 # Build TypeScript using npx to ensure tsc is available
 RUN npx tsc
