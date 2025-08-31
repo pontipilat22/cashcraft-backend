@@ -1,0 +1,48 @@
+# Простой Dockerfile без multi-stage для отладки
+FROM node:18-alpine
+
+# Принудительная пересборка
+ENV CACHE_BUST=2024-01-15-SIMPLE-BUILD
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Копируем package.json и package-lock.json
+COPY package*.json ./
+
+# Устанавливаем ВСЕ зависимости (включая dev для сборки)
+RUN npm ci
+
+# Копируем исходный код
+COPY . .
+
+# Проверяем TypeScript
+RUN npm list typescript
+RUN npx tsc --version
+
+# Собираем TypeScript
+RUN npx tsc
+
+# Делаем скрипт запуска исполняемым
+RUN chmod +x start.sh
+
+# Создаем пользователя для безопасности
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodejs -u 1001
+
+# Меняем владельца файлов
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+# Открываем порт
+EXPOSE 3000
+
+# Устанавливаем переменные окружения
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Graceful shutdown
+STOPSIGNAL SIGTERM
+
+# Запускаем приложение через скрипт
+CMD ["./start.sh"]

@@ -2,7 +2,8 @@
 FROM node:18-alpine AS builder
 
 # Принудительная пересборка - изменить эту строку для сброса кэша
-ENV CACHE_BUST=2024-01-15-v2
+ENV CACHE_BUST=2024-01-15-v3-FORCE-REBUILD
+ENV BUILD_DATE=$(date +%Y%m%d-%H%M%S)
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
@@ -10,14 +11,19 @@ WORKDIR /app
 # Копируем package.json и package-lock.json
 COPY package*.json ./
 
-# Устанавливаем ВСЕ зависимости (включая dev для сборки)
-RUN npm ci
+# ВАЖНО: Устанавливаем ВСЕ зависимости включая devDependencies для сборки TypeScript
+RUN npm ci --include=dev
+
+# Проверяем что TypeScript установлен
+RUN npm list typescript || echo "TypeScript not found in dependencies"
+RUN which tsc || echo "tsc command not found in PATH"
+RUN npx tsc --version || echo "tsc not available via npx"
 
 # Копируем исходный код
 COPY . .
 
-# Собираем TypeScript
-RUN npm run build
+# Собираем TypeScript используя npx для гарантии
+RUN npx tsc
 
 # Production stage
 FROM node:18-alpine AS production

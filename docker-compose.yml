@@ -4,8 +4,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: production
+      dockerfile: Dockerfile.simple
     ports:
       - "3000:3000"
     environment:
