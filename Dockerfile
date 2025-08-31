@@ -1,6 +1,9 @@
 # Build stage
 FROM node:18-alpine AS builder
 
+# Принудительная пересборка - изменить эту строку для сброса кэша
+ENV CACHE_BUST=2024-01-15-v2
+
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
