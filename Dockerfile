@@ -1,68 +1,39 @@
-# Build stage
-FROM node:18-alpine AS builder
+# RAILWAY FORCE REBUILD - SIMPLE VERSION V5
+FROM node:18-alpine
 
-# Принудительная пересборка - изменить эту строку для сброса кэша
-ENV CACHE_BUST=2024-01-15-v4-FORCE-REBUILD
-ENV BUILD_DATE=20240115-143000
-
-# Устанавливаем рабочую директорию
+# CRITICAL: Install ALL dependencies including dev for TypeScript build
 WORKDIR /app
-
-# Копируем package.json и package-lock.json
 COPY package*.json ./
+RUN npm ci
 
-# ВАЖНО: Устанавливаем ВСЕ зависимости включая devDependencies для сборки TypeScript
-RUN npm ci --include=dev
+# Debug: Check TypeScript installation
+RUN npm list typescript
+RUN npx tsc --version
 
-# Проверяем что TypeScript установлен
-RUN npm list typescript || echo "TypeScript not found in dependencies"
-RUN which tsc || echo "tsc command not found in PATH"
-RUN npx tsc --version || echo "tsc not available via npx"
-
-# Копируем исходный код
+# Copy source code
 COPY . .
 
-# Собираем TypeScript используя npx для гарантии
+# Build TypeScript using npx to ensure tsc is available
 RUN npx tsc
 
-# Production stage
-FROM node:18-alpine AS production
-
-# Устанавливаем рабочую директорию
-WORKDIR /app
-
-# Копируем package.json и package-lock.json
-COPY package*.json ./
-
-# Устанавливаем только production зависимости
-RUN npm ci --only=production --omit=dev
-
-# Копируем собранный код из builder stage
-COPY --from=builder /app/dist ./dist
-
-# Копируем скрипт запуска
-COPY start.sh ./
-
-# Делаем скрипт запуска исполняемым
+# Make start script executable
 RUN chmod +x start.sh
 
-# Создаем пользователя для безопасности
+# Create user for security
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
-
-# Меняем владельца файлов
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-# Открываем порт
+# Expose port
 EXPOSE 3000
 
-# Устанавливаем переменные окружения
+# Environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
 
 # Graceful shutdown
 STOPSIGNAL SIGTERM
 
-# Запускаем приложение через скрипт
-CMD ["./start.sh"] 
+# Start application
+CMD ["./start.sh"]
