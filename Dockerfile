@@ -2,8 +2,8 @@
 FROM node:18-alpine AS builder
 
 # Принудительная пересборка - изменить эту строку для сброса кэша
-ENV CACHE_BUST=2024-01-15-v3-FORCE-REBUILD
-ENV BUILD_DATE=$(date +%Y%m%d-%H%M%S)
+ENV CACHE_BUST=2024-01-15-v4-FORCE-REBUILD
+ENV BUILD_DATE=20240115-143000
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
